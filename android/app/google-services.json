@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "27494986583",
+    "firebase_url": "https://good-vibes-2ee90.firebaseio.com",
+    "project_id": "good-vibes-2ee90",
+    "storage_bucket": "good-vibes-2ee90.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27494986583:android:2b6a2c55f0ed4af0468412",
+        "android_client_info": {
+          "package_name": "com.health.goodvibes"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "27494986583-gmnu6gf1u9sou9hcpevq9r7d0n7pkp3h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.health.goodvibes",
+            "certificate_hash": "6cbdfa840c76342287220ad885c28be2e3fbb9bd"
+          }
+        },
+        {
+          "client_id": "27494986583-71l3hivksjltc5emc69tilttmnfk78qu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBWFrRneEkcftxIeZZ5NYYl9ta_gGq3qf8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "27494986583-71l3hivksjltc5emc69tilttmnfk78qu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
