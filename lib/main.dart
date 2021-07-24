@@ -1,12 +1,21 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_native_timezone/flutter_native_timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+import 'package:firebase_database/firebase_database.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
+List<Quote> quotes = [];
 
-
-void main() async {
+Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
+  final String? timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
+  tz.setLocalLocation(tz.getLocation(timeZoneName!));
 
   var initializationSettingsAndroid = AndroidInitializationSettings('codex_logo');
   var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
@@ -75,8 +84,61 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  tz.TZDateTime _nextInstance(int hour, int minute) {
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    print(now);
+    print(scheduledDate);
+    // if (scheduledDate.isBefore(now)) {
+    //   scheduledDate = scheduledDate.add(const Duration(days: 1));
+    // }
+    return scheduledDate;
+  }
+
+  Future<void> _scheduleDailyNotification(int hour, int minute) async {
+
+    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+
+    print(now);
+    print(scheduledDate);
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      0,
+      'Office',
+      'Wazzup',
+      scheduledDate,
+      // _nextInstance(),
+
+      // const NotificationDetails(
+      //   android: AndroidNotificationDetails(
+      //     'daily notification channel id',
+      //     'daily notification channel name',
+      //     'daily notification description'),
+      // ),
+      // androidAllowWhileIdle: true,
+      // uiLocalNotificationDateInterpretation:
+      // UILocalNotificationDateInterpretation.absoluteTime,
+      // matchDateTimeComponents: DateTimeComponents.time);
+
+    const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'alarm_notif',
+          'alarm_notif',
+          'Channel for Alarm notification',
+          icon: 'codex_logo',
+          // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+          largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+        ),
+      ),
+      androidAllowWhileIdle: true,
+      uiLocalNotificationDateInterpretation:
+      UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time);
+  }
+
   void scheduleAlarm() async {
-    var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 10));
+    var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'alarm_notif',
       'alarm_notif',
@@ -87,8 +149,24 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+    await _scheduleDailyNotification(18, 45);
+    await fetchQuotes();
 
-    await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+    // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+    // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+    // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  }
+
+  Future<void> fetchQuotes() async{
+    databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
+      Map<dynamic, dynamic> quotesMap = snapshot.value;
+
+      quotesMap.forEach((key, value) {
+        Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
+        quotes.add(quote);
+      });
+      // print(quotes);
+    });
   }
 
   @override
@@ -143,4 +221,13 @@ class _MyHomePageState extends State<MyHomePage> {
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
+}
+
+class Quote{
+  final String quote;
+  final int sent, upvotes, downvotes;
+
+  Quote(this.quote, this.sent, this.upvotes, this.downvotes);
+
+
 }
