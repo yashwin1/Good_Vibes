@@ -1,4 +1,6 @@
 import 'dart:async';
+
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
@@ -21,12 +23,134 @@ Future<void> main() async {
   var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
     onSelectNotification: (String? payload) async {
-      if (payload != null) {
-        debugPrint('notification payload:  + $payload');
-      }
+      await onSelectNotifications(payload);
     });
 
   runApp(MyApp());
+}
+
+tz.TZDateTime _nextInstance(int hour, int minute) {
+  final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+  print(now);
+  print(scheduledDate);
+  // if (scheduledDate.isBefore(now)) {
+  //   scheduledDate = scheduledDate.add(const Duration(days: 1));
+  // }
+  return scheduledDate;
+}
+
+// Future<void> _scheduleDailyNotification(int hour, int minute) async {
+//
+//   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+//   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+//
+//   print(now);
+//   print(scheduledDate);
+//
+//   await flutterLocalNotificationsPlugin.zonedSchedule(
+//     0,
+//     'Office',
+//     'Wazzup',
+//     scheduledDate,
+//     const NotificationDetails(
+//       android: AndroidNotificationDetails(
+//         'alarm_notif',
+//         'alarm_notif',
+//         'Channel for Alarm notification',
+//         icon: 'codex_logo',
+//         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+//         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+//       ),
+//     ),
+//     androidAllowWhileIdle: true,
+//     uiLocalNotificationDateInterpretation:
+//     UILocalNotificationDateInterpretation.absoluteTime,
+//     matchDateTimeComponents: DateTimeComponents.time);
+// }
+
+Future<void> scheduleNotification() async {
+  // var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
+  print('function called');
+  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    'alarm_notif',
+    'alarm_notif',
+    'Channel for Alarm notification',
+    icon: 'codex_logo',
+    // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+    largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+  );
+
+  var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+
+  Random random = new Random();
+  int hour = random.nextInt(7) + 8;
+  int minute = random.nextInt(60);
+
+  print(hour);
+  print(minute);
+
+  // await _scheduleDailyNotification(18, 45);
+  await fetchQuotes();
+
+
+  final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 12, 48);
+
+  print(now);
+  print(scheduledDate);
+
+  await flutterLocalNotificationsPlugin.zonedSchedule(
+    0,
+    'Office',
+    'Wazzup',
+    scheduledDate,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'alarm_notif',
+        'alarm_notif',
+        'Channel for Alarm notification',
+        icon: 'codex_logo',
+        // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+        largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+      ),
+    ),
+    androidAllowWhileIdle: true,
+    uiLocalNotificationDateInterpretation:
+    UILocalNotificationDateInterpretation.absoluteTime,
+    matchDateTimeComponents: DateTimeComponents.time);
+
+  // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+}
+
+Future onSelectNotifications(String? payload) async {
+  if (payload != null)
+    print('notif payload = $payload');
+  print('Wazzup');
+  await scheduleNotification();
+  // showDialog(
+  //   context: context,
+  //   builder: (_) {
+  //     return new AlertDialog(
+  //       title: Text("PayLoad"),
+  //       content: Text("Payload : $payload"),
+  //     );
+  //   },
+  // );
+}
+
+Future<void> fetchQuotes() async{
+  databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
+    Map<dynamic, dynamic> quotesMap = snapshot.value;
+
+    quotesMap.forEach((key, value) {
+      Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
+      quotes.add(quote);
+    });
+    // print(quotes);
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -84,90 +208,125 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  tz.TZDateTime _nextInstance(int hour, int minute) {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-    print(now);
-    print(scheduledDate);
-    // if (scheduledDate.isBefore(now)) {
-    //   scheduledDate = scheduledDate.add(const Duration(days: 1));
-    // }
-    return scheduledDate;
-  }
-
-  Future<void> _scheduleDailyNotification(int hour, int minute) async {
-
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-
-    print(now);
-    print(scheduledDate);
-
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Office',
-      'Wazzup',
-      scheduledDate,
-      // _nextInstance(),
-
-      // const NotificationDetails(
-      //   android: AndroidNotificationDetails(
-      //     'daily notification channel id',
-      //     'daily notification channel name',
-      //     'daily notification description'),
-      // ),
-      // androidAllowWhileIdle: true,
-      // uiLocalNotificationDateInterpretation:
-      // UILocalNotificationDateInterpretation.absoluteTime,
-      // matchDateTimeComponents: DateTimeComponents.time);
-
-    const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'alarm_notif',
-          'alarm_notif',
-          'Channel for Alarm notification',
-          icon: 'codex_logo',
-          // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-          largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-        ),
-      ),
-      androidAllowWhileIdle: true,
-      uiLocalNotificationDateInterpretation:
-      UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time);
-  }
-
-  void scheduleAlarm() async {
-    var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'alarm_notif',
-      'alarm_notif',
-      'Channel for Alarm notification',
-      icon: 'codex_logo',
-      // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-      largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-    );
-
-    var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-    await _scheduleDailyNotification(18, 45);
-    await fetchQuotes();
-
-    // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-    // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-    // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-  }
-
-  Future<void> fetchQuotes() async{
-    databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
-      Map<dynamic, dynamic> quotesMap = snapshot.value;
-
-      quotesMap.forEach((key, value) {
-        Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
-        quotes.add(quote);
-      });
-      // print(quotes);
-    });
-  }
+  // tz.TZDateTime _nextInstance(int hour, int minute) {
+  //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+  //   print(now);
+  //   print(scheduledDate);
+  //   // if (scheduledDate.isBefore(now)) {
+  //   //   scheduledDate = scheduledDate.add(const Duration(days: 1));
+  //   // }
+  //   return scheduledDate;
+  // }
+  //
+  // // Future<void> _scheduleDailyNotification(int hour, int minute) async {
+  // //
+  // //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  // //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+  // //
+  // //   print(now);
+  // //   print(scheduledDate);
+  // //
+  // //   await flutterLocalNotificationsPlugin.zonedSchedule(
+  // //     0,
+  // //     'Office',
+  // //     'Wazzup',
+  // //     scheduledDate,
+  // //     const NotificationDetails(
+  // //       android: AndroidNotificationDetails(
+  // //         'alarm_notif',
+  // //         'alarm_notif',
+  // //         'Channel for Alarm notification',
+  // //         icon: 'codex_logo',
+  // //         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+  // //         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+  // //       ),
+  // //     ),
+  // //     androidAllowWhileIdle: true,
+  // //     uiLocalNotificationDateInterpretation:
+  // //     UILocalNotificationDateInterpretation.absoluteTime,
+  // //     matchDateTimeComponents: DateTimeComponents.time);
+  // // }
+  //
+  // Future<void> scheduleNotification() async {
+  //   var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
+  //   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+  //     'alarm_notif',
+  //     'alarm_notif',
+  //     'Channel for Alarm notification',
+  //     icon: 'codex_logo',
+  //     // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+  //     largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+  //   );
+  //
+  //   var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  //
+  //   Random random = new Random();
+  //   int hour = random.nextInt(7) + 8;
+  //   int minute = random.nextInt(60);
+  //
+  //   print(hour);
+  //   print(minute);
+  //
+  //   // await _scheduleDailyNotification(18, 45);
+  //   await fetchQuotes();
+  //
+  //
+  //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+  //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 12, 26);
+  //
+  //   print(now);
+  //   print(scheduledDate);
+  //
+  //   await flutterLocalNotificationsPlugin.zonedSchedule(
+  //     0,
+  //     'Office',
+  //     'Wazzup',
+  //     scheduledDate,
+  //     const NotificationDetails(
+  //       android: AndroidNotificationDetails(
+  //         'alarm_notif',
+  //         'alarm_notif',
+  //         'Channel for Alarm notification',
+  //         icon: 'codex_logo',
+  //         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+  //         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+  //       ),
+  //     ),
+  //     androidAllowWhileIdle: true,
+  //     uiLocalNotificationDateInterpretation:
+  //     UILocalNotificationDateInterpretation.absoluteTime,
+  //     matchDateTimeComponents: DateTimeComponents.time);
+  //
+  //   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  //   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  //   // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
+  // }
+  //
+  // Future onSelectNotification(String payload) async {
+  //   scheduleNotification();
+  //   showDialog(
+  //     context: context,
+  //     builder: (_) {
+  //       return new AlertDialog(
+  //         title: Text("PayLoad"),
+  //         content: Text("Payload : $payload"),
+  //       );
+  //     },
+  //   );
+  // }
+  //
+  // Future<void> fetchQuotes() async{
+  //   databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
+  //     Map<dynamic, dynamic> quotesMap = snapshot.value;
+  //
+  //     quotesMap.forEach((key, value) {
+  //       Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
+  //       quotes.add(quote);
+  //     });
+  //     // print(quotes);
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +374,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         // onPressed: _incrementCounter,
-        onPressed: scheduleAlarm,
+        onPressed: scheduleNotification,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
