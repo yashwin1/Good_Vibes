@@ -69,41 +69,54 @@ tz.TZDateTime _nextInstance(int hour, int minute) {
 //     matchDateTimeComponents: DateTimeComponents.time);
 // }
 
-Future<void> scheduleNotification() async {
+Future<void> scheduleNotification({int id = 0}) async {
   // var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
   print('function called');
-  var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-    'alarm_notif',
-    'alarm_notif',
-    'Channel for Alarm notification',
-    icon: 'codex_logo',
-    // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-    largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-  );
 
-  var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
+  await fetchQuotes();
+
+  // const BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+  //   quotes[0].quote,
+  //   htmlFormatBigText: true,
+  //   htmlFormatContentTitle: true,
+  //   htmlFormatSummaryText: true,
+  // );
+
+  // var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+  //   'alarm_notif',
+  //   'alarm_notif',
+  //   'Channel for Alarm notification',
+  //   icon: 'codex_logo',
+  //   // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
+  //   largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+  //   // styleInformation: bigTextStyleInformation,
+  // );
+
+  // var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
 
   Random random = new Random();
   int hour = random.nextInt(7) + 8;
   int minute = random.nextInt(60);
 
-  print(hour);
-  print(minute);
+  if (id == 1){
+    hour = random.nextInt(7) + 16;
+  }
 
   // await _scheduleDailyNotification(18, 45);
-  await fetchQuotes();
 
 
+  //TODO: Change schceduled time to hour, minute
   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 12, 48);
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 19, 43);
 
-  print(now);
-  print(scheduledDate);
+  if (id == 1){
+    scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 19, 02);
+  }
 
   await flutterLocalNotificationsPlugin.zonedSchedule(
-    0,
-    'Office',
-    'Wazzup',
+    id,
+    'Dose of positivity',
+    quotes[0].quote,
     scheduledDate,
     const NotificationDetails(
       android: AndroidNotificationDetails(
@@ -118,7 +131,8 @@ Future<void> scheduleNotification() async {
     androidAllowWhileIdle: true,
     uiLocalNotificationDateInterpretation:
     UILocalNotificationDateInterpretation.absoluteTime,
-    matchDateTimeComponents: DateTimeComponents.time);
+    matchDateTimeComponents: DateTimeComponents.time,
+    payload: id.toString());
 
   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
@@ -126,10 +140,13 @@ Future<void> scheduleNotification() async {
 }
 
 Future onSelectNotifications(String? payload) async {
-  if (payload != null)
-    print('notif payload = $payload');
-  print('Wazzup');
-  await scheduleNotification();
+
+  if (payload == "0") {
+    await scheduleNotification(id: 1);
+  }
+  else {
+    await scheduleNotification(id: 0);
+  }
   // showDialog(
   //   context: context,
   //   builder: (_) {
@@ -142,12 +159,13 @@ Future onSelectNotifications(String? payload) async {
 }
 
 Future<void> fetchQuotes() async{
-  databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
+  databaseReference.child("Quotes").orderByChild('Sent').once().then((DataSnapshot snapshot){
     Map<dynamic, dynamic> quotesMap = snapshot.value;
 
     quotesMap.forEach((key, value) {
       Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
       quotes.add(quote);
+      // print(quote.quote);
     });
     // print(quotes);
   });
