@@ -7,6 +7,9 @@ import 'package:flutter_native_timezone/flutter_native_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+// import 'package:splashscreen/splashscreen.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
@@ -25,6 +28,12 @@ Future<void> main() async {
     onSelectNotification: (String? payload) async {
       await onSelectNotifications(payload);
     });
+
+  WidgetsFlutterBinding.ensureInitialized();
+  // SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]);
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+  ));
 
   runApp(MyApp());
 }
@@ -132,7 +141,7 @@ Future<void> scheduleNotification({int id = 0}) async {
     uiLocalNotificationDateInterpretation:
     UILocalNotificationDateInterpretation.absoluteTime,
     matchDateTimeComponents: DateTimeComponents.time,
-    payload: id.toString());
+    payload: quotes[0].key);
 
   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
@@ -147,15 +156,6 @@ Future onSelectNotifications(String? payload) async {
   else {
     await scheduleNotification(id: 0);
   }
-  // showDialog(
-  //   context: context,
-  //   builder: (_) {
-  //     return new AlertDialog(
-  //       title: Text("PayLoad"),
-  //       content: Text("Payload : $payload"),
-  //     );
-  //   },
-  // );
 }
 
 Future<void> fetchQuotes() async{
@@ -163,11 +163,9 @@ Future<void> fetchQuotes() async{
     Map<dynamic, dynamic> quotesMap = snapshot.value;
 
     quotesMap.forEach((key, value) {
-      Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
+      Quote quote = new Quote(key, value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
       quotes.add(quote);
-      // print(quote.quote);
     });
-    // print(quotes);
   });
 }
 
@@ -178,54 +176,91 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      // home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: SplashScreen(),
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    Timer(Duration(seconds: 10), () {
+      Navigator.of(context)
+        .pushReplacement(MaterialPageRoute(builder: (_) => MyHomePage()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      backgroundColor: Color(0xffBCDAEA),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: height * 0.15,
+            ),
+            Image.asset(
+              'assets/splash_image.png',
+              height: height * 0.45,
+              width: width,
+            ),
+            SizedBox(
+              height: height * 0.1,
+            ),
+            Text(
+              'Good Vibes',
+              style: GoogleFonts.manrope(
+                textStyle: TextStyle(
+                  fontSize: 38,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: height * 0.05,
+            ),
+            Text(
+              'Vibe high and the magic around \n you will unfold.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.manrope(
+                textStyle: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  // MyHomePage({Key? key, required this.title}) : super(key: key);
+  // final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MainScreen createState() => MainScreen();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
+class MainScreen extends State<MyHomePage> {
   // tz.TZDateTime _nextInstance(int hour, int minute) {
   //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
   //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
@@ -348,43 +383,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        // title: Text(widget.title),
+        title: Text('Good Vibes'),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
               'You have pushed the button this many times:',
             ),
             Text(
-              '$_counter',
+              '1',
               style: Theme.of(context).textTheme.headline4,
             ),
           ],
@@ -395,16 +407,16 @@ class _MyHomePageState extends State<MyHomePage> {
         onPressed: scheduleNotification,
         tooltip: 'Increment',
         child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
 
 class Quote{
-  final String quote;
+  final String quote, key;
   final int sent, upvotes, downvotes;
 
-  Quote(this.quote, this.sent, this.upvotes, this.downvotes);
+  Quote(this.key, this.quote, this.sent, this.upvotes, this.downvotes);
 
 
 }
