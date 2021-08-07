@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'dart:math';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_timezone/flutter_native_timezone.dart';
@@ -9,7 +10,11 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-// import 'package:splashscreen/splashscreen.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'services/FirebaseService.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
@@ -18,6 +23,7 @@ List<Quote> quotes = [];
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
+  Firebase.initializeApp();
   tz.initializeTimeZones();
   final String? timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
   tz.setLocalLocation(tz.getLocation(timeZoneName!));
@@ -184,6 +190,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+///////////////////////////////////////////// SPLASH SCREEN ///////////////////////////////////////////
+
 class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -194,9 +202,13 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Timer(Duration(seconds: 10), () {
-      Navigator.of(context)
-        .pushReplacement(MaterialPageRoute(builder: (_) => MyHomePage()));
+    Timer(Duration(seconds: 5), () {
+      if (FirebaseAuth.instance.currentUser != null){
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+      }
+      else {
+        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+      }
     });
   }
 
@@ -252,15 +264,131 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 }
 
-class MyHomePage extends StatefulWidget {
+///////////////////////////////////////////// LOGIN SCREEN ///////////////////////////////////////////
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({Key? key}) : super(key: key);
+
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  bool isLoading = false;
+
+  void showMessage(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error"),
+          content: Text(message),
+          actions: [
+            TextButton(
+              child: Text("Ok"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        );
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      backgroundColor: Color(0xffBCDAEA),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: height * 0.1,
+            ),
+            Text(
+              'Good Vibes',
+              style: GoogleFonts.manrope(
+                textStyle: TextStyle(
+                  fontSize: 38,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: height * 0.1,
+            ),
+            Image.asset(
+              'assets/login_image.png',
+              height: height * 0.45,
+              width: width,
+            ),
+            SizedBox(
+              height: height * 0.1,
+            ),
+            // TODO: Replace mail icon with google icon
+            SignInButtonBuilder(
+              text: 'Sign in with Google',
+              textColor: Colors.black87,
+              icon: Icons.email,
+              iconColor: Colors.black12,
+              // image: Image.asset('assets/google_icon'),
+              // mini: true,
+              // onPressed: () {},
+              backgroundColor: Colors.white,
+              onPressed: () async {
+                setState(() {
+                  isLoading = true;
+                });
+                FirebaseService service = new FirebaseService();
+                try {
+                  await service.signInwithGoogle();
+                  // User? user = FirebaseAuth.instance.currentUser;
+                  // showMessage(user!.email!);
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+                  // Navigator.pushNamedAndRemoveUntil(context, Constants.homeNavigate, (route) => false);
+                } catch(e){
+                  if(e is FirebaseAuthException){
+                    Fluttertoast.showToast(
+                      msg: e.message!,
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1
+                    );
+                  }
+                }
+                setState(() {
+                  isLoading = false;
+                });
+              },
+            ),
+            // SignInButton(
+            //   Buttons.GoogleDark,
+            //   // mini: true,
+            //   onPressed: () {},
+            // ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+///////////////////////////////////////////// HOMEPAGE SCREEN ///////////////////////////////////////////
+
+class HomePage extends StatefulWidget {
   // MyHomePage({Key? key, required this.title}) : super(key: key);
   // final String title;
 
   @override
-  MainScreen createState() => MainScreen();
+  _HomePage createState() => _HomePage();
 }
 
-class MainScreen extends State<MyHomePage> {
+class _HomePage extends State<HomePage> {
   // tz.TZDateTime _nextInstance(int hour, int minute) {
   //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
   //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
