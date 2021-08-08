@@ -180,6 +180,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -509,32 +510,343 @@ class _HomePage extends State<HomePage> {
   //   });
   // }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // title: Text(widget.title),
-        title: Text('Good Vibes'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+  void notifDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+
+        double width = MediaQuery.of(context).size.width;
+        double height = MediaQuery.of(context).size.height;
+
+        return AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.7),
+          content: Container(
+            width: width * 0.8,
+            height: height * 0.2,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    height: height * 0.01,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: Text(
+                      'Do you want to receive motivation, inspiration, and positivity everyday in the form of handpicked quotes?',
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.manrope(
+                        textStyle: TextStyle(
+                          fontSize: 20,
+                          color: Color(0xff886F75),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            Text(
-              '1',
-              style: Theme.of(context).textTheme.headline4,
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Yes',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xff886F75),
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.6)),
+                    padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 25)),
+                    elevation: MaterialStateProperty.all(0),
+                  )
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'No',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xff886F75),
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.6)),
+                    padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 25)),
+                    elevation: MaterialStateProperty.all(0),
+                  )
+                ),
+              ],
+            ),
+            SizedBox(
+              height: height * 0.01,
             ),
           ],
+        );
+      });
+  }
+
+  void quoteAddDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        double width = MediaQuery.of(context).size.width;
+        double height = MediaQuery.of(context).size.height;
+
+        return AlertDialog(
+          backgroundColor: Colors.white.withOpacity(0.7),
+          content: Container(
+            width: width * 0.8,
+            height: height * 0.2,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(
+                    height: height * 0.01,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        errorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        focusedErrorBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        disabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          borderSide: BorderSide(color: Colors.white),
+                        ),
+                        hintText: 'Enter Quote',
+                        hintStyle: GoogleFonts.manrope(
+                            textStyle: TextStyle(
+                              fontSize: 16,
+                              color: Color(0xff886F75).withOpacity(0.7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                      ),
+                      style: GoogleFonts.manrope(
+                        textStyle: TextStyle(
+                          fontSize: 16,
+                          color: Color(0xff886F75),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      maxLines: 4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Add',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xff886F75),
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.6)),
+                    padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 35)),
+                    elevation: MaterialStateProperty.all(0),
+                  )
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Discard',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Color(0xff886F75),
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.6)),
+                    padding: MaterialStateProperty.all(EdgeInsets.symmetric(vertical: 10, horizontal: 20)),
+                    elevation: MaterialStateProperty.all(0),
+                  )
+                ),
+              ],
+            ),
+            SizedBox(
+              height: height * 0.01,
+            ),
+          ],
+        );
+      });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+
+    double width = MediaQuery.of(context).size.width;
+    double height = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      // appBar: AppBar(
+      //   // title: Text(widget.title),
+      //   title: Text('Welcome ${FirebaseAuth.instance.currentUser!.displayName!}'),
+      // ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/homepage_image.jpg"),
+            fit: BoxFit.cover,
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        // onPressed: _incrementCounter,
-        onPressed: scheduleNotification,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
+        // body: Center(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(
+                height: height * 0.1,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Welcome, \n ${FirebaseAuth.instance.currentUser!.displayName!}',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.manrope(
+                    textStyle: TextStyle(
+                      fontSize: 38,
+                      // color: Colors.white,
+                      color: Color(0xff744B63),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: height * 0.5,
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints.tightFor(width: width * 0.75, height: height * 0.075),
+                child: ElevatedButton.icon(
+                  onPressed: notifDialog,
+                  label: Text(
+                    'Dose of Positivity',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  icon: Icon(Icons.notifications),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.4)),
+                    // padding: MaterialStateProperty.all(EdgeInsets.all(10)),
+                  )
+                ),
+              ),
+              SizedBox(
+                height: height * 0.03,
+              ),
+              ConstrainedBox(
+                constraints: BoxConstraints.tightFor(width: width * 0.75, height: height * 0.075),
+                child: ElevatedButton.icon(
+                  onPressed: quoteAddDialog,
+                  label: Text(
+                    'Add Quotes',
+                    style: GoogleFonts.manrope(
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w300,
+                      ),
+                    ),
+                  ),
+                  icon: Icon(Icons.add),
+                  style: ButtonStyle(
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      )
+                    ),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.4)),
+                    // padding: MaterialStateProperty.all(EdgeInsets.all(20)),
+                  )
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
