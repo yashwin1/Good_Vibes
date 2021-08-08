@@ -19,6 +19,8 @@ import 'package:fluttertoast/fluttertoast.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
 List<Quote> quotes = [];
+double height = 0;
+double width = 0;
 
 Future<void> main() async {
 
@@ -204,7 +206,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // TODO: implement initState
     super.initState();
     Timer(Duration(seconds: 5), () {
-      if (FirebaseAuth.instance.currentUser != null){
+      if (FirebaseAuth.instance.currentUser == null){
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
       }
       else {
@@ -216,8 +218,10 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
 
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
+    double widthTemp = MediaQuery.of(context).size.width;
+    double heightTemp = MediaQuery.of(context).size.height;
+    width = widthTemp;
+    height = heightTemp;
 
     return Scaffold(
       backgroundColor: Color(0xffBCDAEA),
@@ -298,8 +302,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
+    // double width = MediaQuery.of(context).size.width;
+    // double height = MediaQuery.of(context).size.height;
 
     return Scaffold(
       backgroundColor: Color(0xffBCDAEA),
@@ -366,11 +370,6 @@ class _LoginPageState extends State<LoginPage> {
                 });
               },
             ),
-            // SignInButton(
-            //   Buttons.GoogleDark,
-            //   // mini: true,
-            //   onPressed: () {},
-            // ),
           ],
         ),
       ),
@@ -515,8 +514,8 @@ class _HomePage extends State<HomePage> {
       context: context,
       builder: (BuildContext context) {
 
-        double width = MediaQuery.of(context).size.width;
-        double height = MediaQuery.of(context).size.height;
+        // double width = MediaQuery.of(context).size.width;
+        // double height = MediaQuery.of(context).size.height;
 
         return AlertDialog(
           backgroundColor: Colors.white.withOpacity(0.7),
@@ -554,6 +553,12 @@ class _HomePage extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    Fluttertoast.showToast(
+                      msg: 'Subscribed successfully!',
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1
+                    );
                   },
                   child: Text(
                     'Yes',
@@ -577,8 +582,15 @@ class _HomePage extends State<HomePage> {
                   )
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop();
+                    await flutterLocalNotificationsPlugin.cancelAll();
+                    Fluttertoast.showToast(
+                      msg: 'Unsubscribed successfully!',
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1
+                    );
                   },
                   child: Text(
                     'No',
@@ -611,12 +623,31 @@ class _HomePage extends State<HomePage> {
       });
   }
 
+  final myController = TextEditingController();
+  // @override
+  // void dispose() {
+  //   // Clean up the controller when the widget is removed from the widget tree.
+  //   myController.clear();
+  //   super.dispose();
+  // }
+
+  Future<void> addQuoteToDB(String quoteText) async{
+    databaseReference.child('Users/${FirebaseAuth.instance.currentUser!.uid}/NewQuotes').push().set({
+      'quote': quoteText,
+    });
+
+    databaseReference.child('NewQuotes/').push().set({
+      'quote': quoteText,
+    });
+
+  }
+
   void quoteAddDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        double width = MediaQuery.of(context).size.width;
-        double height = MediaQuery.of(context).size.height;
+        // double width = MediaQuery.of(context).size.width;
+        // double height = MediaQuery.of(context).size.height;
 
         return AlertDialog(
           backgroundColor: Colors.white.withOpacity(0.7),
@@ -633,6 +664,8 @@ class _HomePage extends State<HomePage> {
                   Padding(
                     padding: const EdgeInsets.all(6.0),
                     child: TextField(
+                      controller: myController,
+                      textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(20)),
@@ -686,8 +719,18 @@ class _HomePage extends State<HomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.of(context).pop();
+                    Fluttertoast.showToast(
+                      msg: 'Quote added successfully!',
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.CENTER,
+                      timeInSecForIosWeb: 1
+                    );
+                    await addQuoteToDB(myController.text);
+                    myController.clear();
+                    // print(myController.text);
+                    // dispose();
                   },
                   child: Text(
                     'Add',
@@ -713,6 +756,8 @@ class _HomePage extends State<HomePage> {
                 ElevatedButton(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    myController.clear();
+                    // dispose();
                   },
                   child: Text(
                     'Discard',
@@ -748,10 +793,11 @@ class _HomePage extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
 
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
+    // double width = MediaQuery.of(context).size.width;
+    // double height = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       // appBar: AppBar(
       //   // title: Text(widget.title),
       //   title: Text('Welcome ${FirebaseAuth.instance.currentUser!.displayName!}'),
