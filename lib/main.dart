@@ -22,6 +22,8 @@ List<Quote> quotes = [];
 double height = 0;
 double width = 0;
 FirebaseService service = new FirebaseService();
+bool inForeground = true;
+bool throughNotif = false;
 
 Future<void> main() async {
 
@@ -35,6 +37,7 @@ Future<void> main() async {
   var initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
   await flutterLocalNotificationsPlugin.initialize(initializationSettings,
     onSelectNotification: (String? payload) async {
+      throughNotif = true;
       await onSelectNotifications(payload);
     });
 
@@ -125,11 +128,11 @@ Future<void> scheduleNotification({int id = 0}) async {
 
   //TODO: Change schceduled time to hour, minute
   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 11);
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20, 13);
 
-  if (id == 1){
-    scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 12);
-  }
+  // if (id == 1){
+  //   scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 12);
+  // }
 
   if (scheduledDate.isBefore(now)) {
     scheduledDate = scheduledDate.add(const Duration(days: 1));
@@ -143,9 +146,9 @@ Future<void> scheduleNotification({int id = 0}) async {
     scheduledDate,
     const NotificationDetails(
       android: AndroidNotificationDetails(
-        'alarm_notif',
-        'alarm_notif',
-        'Channel for Alarm notification',
+        'Dose of Positivity',
+        'Dose of Positivity',
+        'Channel for Dose of Positivity',
         icon: 'codex_logo',
         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
@@ -165,6 +168,8 @@ Future<void> scheduleNotification({int id = 0}) async {
 Future onSelectNotifications(String? payload) async {
 
   if (payload![0] == "0") {
+    main();
+    // DoseOfPositivity();
     await scheduleNotification(id: 1);
   }
   else {
@@ -212,7 +217,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // TODO: implement initState
     super.initState();
     Timer(Duration(seconds: 5), () {
-      if (FirebaseAuth.instance.currentUser == null){
+      if (FirebaseAuth.instance.currentUser != null){
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
       }
       else {
@@ -393,126 +398,20 @@ class HomePage extends StatefulWidget {
   _HomePage createState() => _HomePage();
 }
 
-class _HomePage extends State<HomePage> {
-  // tz.TZDateTime _nextInstance(int hour, int minute) {
-  //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-  //   print(now);
-  //   print(scheduledDate);
-  //   // if (scheduledDate.isBefore(now)) {
-  //   //   scheduledDate = scheduledDate.add(const Duration(days: 1));
-  //   // }
-  //   return scheduledDate;
-  // }
-  //
-  // // Future<void> _scheduleDailyNotification(int hour, int minute) async {
-  // //
-  // //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  // //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-  // //
-  // //   print(now);
-  // //   print(scheduledDate);
-  // //
-  // //   await flutterLocalNotificationsPlugin.zonedSchedule(
-  // //     0,
-  // //     'Office',
-  // //     'Wazzup',
-  // //     scheduledDate,
-  // //     const NotificationDetails(
-  // //       android: AndroidNotificationDetails(
-  // //         'alarm_notif',
-  // //         'alarm_notif',
-  // //         'Channel for Alarm notification',
-  // //         icon: 'codex_logo',
-  // //         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-  // //         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-  // //       ),
-  // //     ),
-  // //     androidAllowWhileIdle: true,
-  // //     uiLocalNotificationDateInterpretation:
-  // //     UILocalNotificationDateInterpretation.absoluteTime,
-  // //     matchDateTimeComponents: DateTimeComponents.time);
-  // // }
-  //
-  // Future<void> scheduleNotification() async {
-  //   var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
-  //   var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-  //     'alarm_notif',
-  //     'alarm_notif',
-  //     'Channel for Alarm notification',
-  //     icon: 'codex_logo',
-  //     // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-  //     largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-  //   );
-  //
-  //   var platformChannelSpecifics = NotificationDetails(android: androidPlatformChannelSpecifics);
-  //
-  //   Random random = new Random();
-  //   int hour = random.nextInt(7) + 8;
-  //   int minute = random.nextInt(60);
-  //
-  //   print(hour);
-  //   print(minute);
-  //
-  //   // await _scheduleDailyNotification(18, 45);
-  //   await fetchQuotes();
-  //
-  //
-  //   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  //   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 12, 26);
-  //
-  //   print(now);
-  //   print(scheduledDate);
-  //
-  //   await flutterLocalNotificationsPlugin.zonedSchedule(
-  //     0,
-  //     'Office',
-  //     'Wazzup',
-  //     scheduledDate,
-  //     const NotificationDetails(
-  //       android: AndroidNotificationDetails(
-  //         'alarm_notif',
-  //         'alarm_notif',
-  //         'Channel for Alarm notification',
-  //         icon: 'codex_logo',
-  //         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
-  //         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
-  //       ),
-  //     ),
-  //     androidAllowWhileIdle: true,
-  //     uiLocalNotificationDateInterpretation:
-  //     UILocalNotificationDateInterpretation.absoluteTime,
-  //     matchDateTimeComponents: DateTimeComponents.time);
-  //
-  //   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-  //   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-  //   // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
-  // }
-  //
-  // Future onSelectNotification(String payload) async {
-  //   scheduleNotification();
-  //   showDialog(
-  //     context: context,
-  //     builder: (_) {
-  //       return new AlertDialog(
-  //         title: Text("PayLoad"),
-  //         content: Text("Payload : $payload"),
-  //       );
-  //     },
-  //   );
-  // }
-  //
-  // Future<void> fetchQuotes() async{
-  //   databaseReference.child("Quotes").once().then((DataSnapshot snapshot){
-  //     Map<dynamic, dynamic> quotesMap = snapshot.value;
-  //
-  //     quotesMap.forEach((key, value) {
-  //       Quote quote = new Quote(value['Quote'], value['Sent'], value['Upvotes'], value['Downvotes']);
-  //       quotes.add(quote);
-  //     });
-  //     // print(quotes);
-  //   });
-  // }
+class _HomePage extends State<HomePage> with WidgetsBindingObserver{
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    inForeground = state == AppLifecycleState.paused;
+    print('inForeground: $inForeground');
+  }
 
   void notifDialog() {
     showDialog(
@@ -799,8 +698,15 @@ class _HomePage extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
 
-    // double width = MediaQuery.of(context).size.width;
-    // double height = MediaQuery.of(context).size.height;
+    print(throughNotif);
+    if (throughNotif){
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
+    }
+
+    double widthTemp = MediaQuery.of(context).size.width;
+    double heightTemp = MediaQuery.of(context).size.height;
+    width = widthTemp;
+    height = heightTemp;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -884,7 +790,7 @@ class _HomePage extends State<HomePage> {
                         borderRadius: BorderRadius.circular(20.0),
                       )
                     ),
-                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xffBF9D9B).withOpacity(0.8)),
+                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xffBF9D9B).withOpacity(0.9)),
                     // padding: MaterialStateProperty.all(EdgeInsets.all(10)),
                   )
                 ),
@@ -913,7 +819,7 @@ class _HomePage extends State<HomePage> {
                         borderRadius: BorderRadius.circular(20.0),
                       )
                     ),
-                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xffBF9D9B).withOpacity(0.55)),
+                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.50)),
                     // padding: MaterialStateProperty.all(EdgeInsets.all(20)),
                   )
                 ),
@@ -926,11 +832,139 @@ class _HomePage extends State<HomePage> {
   }
 }
 
+
+///////////////////////////////////////////// DOSE OF POSITIVITY SCREEN ///////////////////////////////////////////
+
+class DoseOfPositivity extends StatefulWidget {
+  const DoseOfPositivity({Key? key}) : super(key: key);
+
+  @override
+  _DoseOfPositivityState createState() => _DoseOfPositivityState();
+}
+
+class _DoseOfPositivityState extends State<DoseOfPositivity> {
+
+  @override
+  Widget build(BuildContext context) {
+
+    double widthTemp = MediaQuery.of(context).size.width;
+    double heightTemp = MediaQuery.of(context).size.height;
+    width = widthTemp;
+    height = heightTemp;
+
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      extendBodyBehindAppBar: true,
+      appBar: new AppBar(
+        title: new Text("",),
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        leading: GestureDetector(
+          onTap: () {
+            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+          },
+          child: Icon(
+            Icons.home,
+          ),
+        ),
+        actions: [
+          PopupMenuButton(
+            shape: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Colors.white,
+                width: 1
+              ),
+            ),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text("Sign out"),
+                value: 1,
+              ),
+            ],
+            onSelected: (value) {
+              service.signOutFromGoogle();
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+            },
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/homepage_image.jpg"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(
+                height: height * 0.15,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  'Dose of Positivity',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.indieFlower(
+                    textStyle: TextStyle(
+                      fontSize: 46,
+                      // color: Colors.white,
+                      color: Color(0xff744B63),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: height * 0.05,
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.7),
+                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                ),
+                child: Container(
+                  width: width * 0.8,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 35.0, horizontal: 20.0),
+                          child: Text(
+                            'Quote',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.manrope(
+                              textStyle: TextStyle(
+                                fontSize: 24,
+                                color: Color(0xff886F75),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+///////////////////////////////////////////// QUOTE CLASS ///////////////////////////////////////////
+
 class Quote{
   final String quote, key;
   final int sent, upvotes, downvotes;
 
   Quote(this.key, this.quote, this.sent, this.upvotes, this.downvotes);
-
 
 }
