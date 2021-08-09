@@ -21,6 +21,7 @@ DatabaseReference databaseReference = FirebaseDatabase.instance.reference();
 List<Quote> quotes = [];
 double height = 0;
 double width = 0;
+FirebaseService service = new FirebaseService();
 
 Future<void> main() async {
 
@@ -124,12 +125,17 @@ Future<void> scheduleNotification({int id = 0}) async {
 
   //TODO: Change schceduled time to hour, minute
   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 19, 43);
+  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 11);
 
   if (id == 1){
-    scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 19, 02);
+    scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 12);
   }
 
+  if (scheduledDate.isBefore(now)) {
+    scheduledDate = scheduledDate.add(const Duration(days: 1));
+  }
+
+  //TODO: Change notification icon
   await flutterLocalNotificationsPlugin.zonedSchedule(
     id,
     'Dose of positivity',
@@ -149,7 +155,7 @@ Future<void> scheduleNotification({int id = 0}) async {
     uiLocalNotificationDateInterpretation:
     UILocalNotificationDateInterpretation.absoluteTime,
     matchDateTimeComponents: DateTimeComponents.time,
-    payload: quotes[0].key);
+    payload: id.toString() + quotes[0].key);
 
   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
@@ -158,7 +164,7 @@ Future<void> scheduleNotification({int id = 0}) async {
 
 Future onSelectNotifications(String? payload) async {
 
-  if (payload == "0") {
+  if (payload![0] == "0") {
     await scheduleNotification(id: 1);
   }
   else {
@@ -348,7 +354,6 @@ class _LoginPageState extends State<LoginPage> {
                 setState(() {
                   isLoading = true;
                 });
-                FirebaseService service = new FirebaseService();
                 try {
                   await service.signInwithGoogle();
                   // User? user = FirebaseAuth.instance.currentUser;
@@ -559,6 +564,7 @@ class _HomePage extends State<HomePage> {
                       gravity: ToastGravity.CENTER,
                       timeInSecForIosWeb: 1
                     );
+                    scheduleNotification(id: 0);
                   },
                   child: Text(
                     'Yes',
@@ -798,10 +804,33 @@ class _HomePage extends State<HomePage> {
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      // appBar: AppBar(
-      //   // title: Text(widget.title),
-      //   title: Text('Welcome ${FirebaseAuth.instance.currentUser!.displayName!}'),
-      // ),
+      extendBodyBehindAppBar: true,
+      appBar: new AppBar(
+        title: new Text("",),
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+        actions: [
+          PopupMenuButton(
+            shape: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(
+                color: Colors.white,
+                width: 1
+              ),
+            ),
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                child: Text("Sign out"),
+                value: 1,
+              ),
+            ],
+            onSelected: (value) {
+              service.signOutFromGoogle();
+              Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
+            },
+          ),
+        ],
+      ),
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
@@ -809,7 +838,6 @@ class _HomePage extends State<HomePage> {
             fit: BoxFit.cover,
           ),
         ),
-        // body: Center(
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
@@ -822,12 +850,12 @@ class _HomePage extends State<HomePage> {
                 child: Text(
                   'Welcome, \n ${FirebaseAuth.instance.currentUser!.displayName!}',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.manrope(
+                  style: GoogleFonts.indieFlower(
                     textStyle: TextStyle(
-                      fontSize: 38,
+                      fontSize: 46,
                       // color: Colors.white,
                       color: Color(0xff744B63),
-                      fontWeight: FontWeight.w500,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -856,7 +884,7 @@ class _HomePage extends State<HomePage> {
                         borderRadius: BorderRadius.circular(20.0),
                       )
                     ),
-                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.4)),
+                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xffBF9D9B).withOpacity(0.8)),
                     // padding: MaterialStateProperty.all(EdgeInsets.all(10)),
                   )
                 ),
@@ -885,7 +913,7 @@ class _HomePage extends State<HomePage> {
                         borderRadius: BorderRadius.circular(20.0),
                       )
                     ),
-                    backgroundColor: MaterialStateProperty.all<Color>(Colors.white.withOpacity(0.4)),
+                    backgroundColor: MaterialStateProperty.all<Color>(Color(0xffBF9D9B).withOpacity(0.55)),
                     // padding: MaterialStateProperty.all(EdgeInsets.all(20)),
                   )
                 ),

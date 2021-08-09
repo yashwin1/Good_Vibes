@@ -16,7 +16,11 @@ class FirebaseService {
         idToken: googleSignInAuthentication.idToken,
       );
       await _auth.signInWithCredential(credential);
-      await addUser();
+
+      DataSnapshot dataSnapshot = await databaseRef.child('Users').child(_auth.currentUser!.uid).once();
+      if (dataSnapshot.value == null){
+        await addUser();
+      }
     } on FirebaseAuthException catch (e) {
       print(e.message);
       throw e;
@@ -29,8 +33,6 @@ class FirebaseService {
   }
 
   Future<void> addUser() async{
-    // databaseRef.push().set({'name': data, 'comment': 'A good season'});
-    // String key = databaseRef.child('Users/').push().key;
     databaseRef.child('Users/${_auth.currentUser!.uid}').set({
       'uid': _auth.currentUser!.uid,
       'name': _auth.currentUser!.displayName,
