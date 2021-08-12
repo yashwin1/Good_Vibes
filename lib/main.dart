@@ -24,11 +24,15 @@ double width = 0;
 FirebaseService service = new FirebaseService();
 bool inForeground = true;
 bool throughNotif = false;
+String currQuote = '';
+String? selectedNotificationPayload;
+BuildContext? globalBuildContext;
 
 Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   Firebase.initializeApp();
+  await fetchQuotes();
   tz.initializeTimeZones();
   final String? timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
   tz.setLocalLocation(tz.getLocation(timeZoneName!));
@@ -47,19 +51,37 @@ Future<void> main() async {
     statusBarColor: Colors.transparent,
   ));
 
+  // final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  // if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? true) {
+  //   selectedNotificationPayload = notificationAppLaunchDetails!.payload;
+  //   String quoteID = selectedNotificationPayload!.substring(1);
+  //   throughNotif = true;
+  //   print('throughNotif: $throughNotif');
+  //
+  //   // SplashScreen();
+  //   // print(payload);
+  //   // print(quoteID);
+  //   // fetchQuote(quoteID);
+  //
+  // }
+  // else {
+  //   runApp(MyApp());
+  // }
+
   runApp(MyApp());
+
 }
 
-tz.TZDateTime _nextInstance(int hour, int minute) {
-  final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
-  print(now);
-  print(scheduledDate);
-  // if (scheduledDate.isBefore(now)) {
-  //   scheduledDate = scheduledDate.add(const Duration(days: 1));
-  // }
-  return scheduledDate;
-}
+// tz.TZDateTime _nextInstance(int hour, int minute) {
+//   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
+//   tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+//   print(now);
+//   print(scheduledDate);
+//   // if (scheduledDate.isBefore(now)) {
+//   //   scheduledDate = scheduledDate.add(const Duration(days: 1));
+//   // }
+//   return scheduledDate;
+// }
 
 // Future<void> _scheduleDailyNotification(int hour, int minute) async {
 //
@@ -93,8 +115,9 @@ tz.TZDateTime _nextInstance(int hour, int minute) {
 Future<void> scheduleNotification({int id = 0}) async {
   // var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
   print('function called');
-
   await fetchQuotes();
+
+  // await fetchQuotes();
 
   // const BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
   //   quotes[0].quote,
@@ -128,7 +151,11 @@ Future<void> scheduleNotification({int id = 0}) async {
 
   //TODO: Change schceduled time to hour, minute
   final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-  tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 20, 13);
+  // tz.TZDateTime scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 13);
+  tz.TZDateTime scheduledDate = now;
+  scheduledDate = scheduledDate.add(const Duration(seconds: 15));
+  print(now);
+  print(scheduledDate);
 
   // if (id == 1){
   //   scheduledDate = tz.TZDateTime(tz.local, now.year, now.month, now.day, 13, 12);
@@ -152,11 +179,12 @@ Future<void> scheduleNotification({int id = 0}) async {
         icon: 'codex_logo',
         // sound: RawResourceAndroidNotificationSound('a_long_cold_sting'),
         largeIcon: DrawableResourceAndroidBitmap('codex_logo'),
+        importance: Importance.max,
+        priority: Priority.high,
       ),
     ),
     androidAllowWhileIdle: true,
-    uiLocalNotificationDateInterpretation:
-    UILocalNotificationDateInterpretation.absoluteTime,
+    uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     matchDateTimeComponents: DateTimeComponents.time,
     payload: id.toString() + quotes[0].key);
 
@@ -167,14 +195,36 @@ Future<void> scheduleNotification({int id = 0}) async {
 
 Future onSelectNotifications(String? payload) async {
 
-  if (payload![0] == "0") {
-    main();
-    // DoseOfPositivity();
-    await scheduleNotification(id: 1);
+  String quoteID = payload!.substring(1);
+  fetchQuote(quoteID);
+  // await fetchQuotes();
+
+  if (payload[0] == "0") {
+    // main();
+    // SplashScreen();
+    // String quoteID = payload.substring(1);
+    // fetchQuote(quoteID);
+    // DoseOfPositivity(payload);
+    scheduleNotification(id: 1);
   }
   else {
-    await scheduleNotification(id: 0);
+    // fetchQuote(quoteID);
+    scheduleNotification(id: 0);
   }
+
+  if (!inForeground) {
+    Navigator.of(globalBuildContext!).pushReplacement(MaterialPageRoute(builder: (_) => SplashScreen()));
+  }
+
+}
+
+//TODO: Call this function during splash screen loading to avoid delay and error of fetchcing from firebase database
+Future<void> fetchQuote(String quoteID) async{
+  // print(quoteID);
+  databaseReference.child("Quotes/$quoteID").once().then((DataSnapshot snapshot){
+    currQuote = snapshot.value['Quote'];
+    print('fetchQuote: $currQuote');
+  });
 }
 
 Future<void> fetchQuotes() async{
@@ -216,9 +266,20 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Timer(Duration(seconds: 5), () {
+    Timer(Duration(seconds: 4), () {
+
+      print('throughNotif: $throughNotif');
+
       if (FirebaseAuth.instance.currentUser != null){
-        Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+
+        // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
+        if (throughNotif){
+          throughNotif = false;
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
+        }
+        else {
+          Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+        }
       }
       else {
         Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginPage()));
@@ -233,6 +294,7 @@ class _SplashScreenState extends State<SplashScreen> {
     double heightTemp = MediaQuery.of(context).size.height;
     width = widthTemp;
     height = heightTemp;
+    globalBuildContext = context;
 
     return Scaffold(
       backgroundColor: Color(0xffBCDAEA),
@@ -248,8 +310,9 @@ class _SplashScreenState extends State<SplashScreen> {
               height: height * 0.45,
               width: width,
             ),
+            CircularProgressIndicator(),
             SizedBox(
-              height: height * 0.1,
+              height: height * 0.07,
             ),
             Text(
               'Good Vibes',
@@ -315,6 +378,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     // double width = MediaQuery.of(context).size.width;
     // double height = MediaQuery.of(context).size.height;
+    globalBuildContext = context;
 
     return Scaffold(
       backgroundColor: Color(0xffBCDAEA),
@@ -361,9 +425,14 @@ class _LoginPageState extends State<LoginPage> {
                 });
                 try {
                   await service.signInwithGoogle();
-                  // User? user = FirebaseAuth.instance.currentUser;
-                  // showMessage(user!.email!);
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+                  if (throughNotif){
+                    throughNotif = false;
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
+                  }
+                  else {
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
+                  }
+                  // Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
                   // Navigator.pushNamedAndRemoveUntil(context, Constants.homeNavigate, (route) => false);
                 } catch(e){
                   if(e is FirebaseAuthException){
@@ -698,10 +767,12 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver{
   @override
   Widget build(BuildContext context) {
 
-    print(throughNotif);
-    if (throughNotif){
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
-    }
+    // print(throughNotif);
+    // if (throughNotif){
+    //   Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => DoseOfPositivity()));
+    // }
+
+    globalBuildContext = context;
 
     double widthTemp = MediaQuery.of(context).size.width;
     double heightTemp = MediaQuery.of(context).size.height;
@@ -851,6 +922,8 @@ class _DoseOfPositivityState extends State<DoseOfPositivity> {
     double heightTemp = MediaQuery.of(context).size.height;
     width = widthTemp;
     height = heightTemp;
+    print('DoseOfPositivity: $currQuote');
+    globalBuildContext = context;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -935,7 +1008,7 @@ class _DoseOfPositivityState extends State<DoseOfPositivity> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 35.0, horizontal: 20.0),
                           child: Text(
-                            'Quote',
+                            currQuote,
                             textAlign: TextAlign.center,
                             style: GoogleFonts.manrope(
                               textStyle: TextStyle(
