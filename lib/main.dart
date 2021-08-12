@@ -25,6 +25,7 @@ FirebaseService service = new FirebaseService();
 bool inBackground = true;
 bool throughNotif = false;
 String currQuote = '';
+String currQuoteID = '';
 String? selectedNotificationPayload;
 BuildContext? globalBuildContext;
 
@@ -202,6 +203,7 @@ Future<void> scheduleNotification({int id = 0}) async {
 Future onSelectNotifications(String? payload) async {
 
   String quoteID = payload!.substring(1);
+  currQuoteID = quoteID;
   fetchQuote(quoteID);
   // await fetchQuotes();
 
@@ -244,6 +246,14 @@ Future<void> fetchQuotes() async{
       quotes.add(quote);
     });
   });
+}
+
+Future<void> likeQuote(String quoteID) async{
+  databaseReference.child("Quotes/$quoteID/Upvotes").set(ServerValue.increment(1));
+}
+
+Future<void> dislikeQuote(String quoteID) async{
+  databaseReference.child("Quotes/$quoteID/Upvotes").set(ServerValue.increment(-1));
 }
 
 class MyApp extends StatelessWidget {
@@ -932,6 +942,8 @@ class _DoseOfPositivityState extends State<DoseOfPositivity> {
     height = heightTemp;
     print('DoseOfPositivity: $currQuote');
     globalBuildContext = context;
+    bool upvoted = false;
+    bool downvoted = false;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -1030,6 +1042,66 @@ class _DoseOfPositivityState extends State<DoseOfPositivity> {
                     ),
                   ),
                 ),
+              ),
+              SizedBox(
+                height: height * 0.05,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.thumb_up),
+                    color: Colors.green.withOpacity(0.8),
+                    iconSize: 30.0,
+                    onPressed: () {
+                      if (!upvoted){
+                        likeQuote(currQuoteID);
+                        Fluttertoast.showToast(
+                          msg: 'Upvoted! :)',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                          timeInSecForIosWeb: 1
+                        );
+                        upvoted = true;
+                      }
+                      else{
+                        Fluttertoast.showToast(
+                          msg: 'Already upvoted',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                          timeInSecForIosWeb: 1
+                        );
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.thumb_down),
+                    color: Colors.red.withOpacity(0.8),
+                    iconSize: 30.0,
+                    onPressed: () {
+                      if (!downvoted){
+                        dislikeQuote(currQuoteID);
+                        Fluttertoast.showToast(
+                          msg: 'Downvoted :(',
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.CENTER,
+                          timeInSecForIosWeb: 1
+                        );
+                        downvoted = true;
+                      }
+                      else{
+                        if (downvoted){
+                          Fluttertoast.showToast(
+                            msg: 'Already downvoted',
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.CENTER,
+                            timeInSecForIosWeb: 1
+                          );
+                        }
+                      }
+                    },
+                  ),
+                ],
               )
             ],
           ),
