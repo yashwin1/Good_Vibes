@@ -22,7 +22,7 @@ List<Quote> quotes = [];
 double height = 0;
 double width = 0;
 FirebaseService service = new FirebaseService();
-bool inForeground = true;
+bool inBackground = true;
 bool throughNotif = false;
 String currQuote = '';
 String? selectedNotificationPayload;
@@ -32,6 +32,7 @@ Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
   Firebase.initializeApp();
+  // quotes.clear();
   await fetchQuotes();
   tz.initializeTimeZones();
   final String? timeZoneName = await FlutterNativeTimezone.getLocalTimezone();
@@ -51,22 +52,24 @@ Future<void> main() async {
     statusBarColor: Colors.transparent,
   ));
 
-  // final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
-  // if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? true) {
-  //   selectedNotificationPayload = notificationAppLaunchDetails!.payload;
-  //   String quoteID = selectedNotificationPayload!.substring(1);
-  //   throughNotif = true;
-  //   print('throughNotif: $throughNotif');
-  //
-  //   // SplashScreen();
-  //   // print(payload);
-  //   // print(quoteID);
-  //   // fetchQuote(quoteID);
-  //
-  // }
-  // else {
-  //   runApp(MyApp());
-  // }
+  final NotificationAppLaunchDetails? notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? true) {
+    selectedNotificationPayload = notificationAppLaunchDetails!.payload;
+    // String quoteID = selectedNotificationPayload!.substring(1);
+    print(selectedNotificationPayload);
+    throughNotif = true;
+    onSelectNotifications(selectedNotificationPayload);
+    print('throughNotif: $throughNotif');
+
+    // SplashScreen();
+    // print(payload);
+    // print(quoteID);
+    // fetchQuote(quoteID);
+
+  }
+  else {
+    runApp(MyApp());
+  }
 
   runApp(MyApp());
 
@@ -115,7 +118,8 @@ Future<void> main() async {
 Future<void> scheduleNotification({int id = 0}) async {
   // var scheduledNotificationDateTime = DateTime.now().add(Duration(seconds: 5));
   print('function called');
-  await fetchQuotes();
+  // quotes = [];
+  fetchQuotes();
 
   // await fetchQuotes();
 
@@ -188,6 +192,8 @@ Future<void> scheduleNotification({int id = 0}) async {
     matchDateTimeComponents: DateTimeComponents.time,
     payload: id.toString() + quotes[0].key);
 
+  quotes.clear();
+
   // await flutterLocalNotificationsPlugin.schedule(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
   // await flutterLocalNotificationsPlugin.periodicallyShow(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
   // await flutterLocalNotificationsPlugin.showDailyAtTime(0, 'Office', 'Wazzup', scheduledNotificationDateTime, platformChannelSpecifics);
@@ -198,6 +204,8 @@ Future onSelectNotifications(String? payload) async {
   String quoteID = payload!.substring(1);
   fetchQuote(quoteID);
   // await fetchQuotes();
+
+  // scheduleNotification();
 
   if (payload[0] == "0") {
     // main();
@@ -212,7 +220,7 @@ Future onSelectNotifications(String? payload) async {
     scheduleNotification(id: 0);
   }
 
-  if (!inForeground) {
+  if (!inBackground) {
     Navigator.of(globalBuildContext!).pushReplacement(MaterialPageRoute(builder: (_) => SplashScreen()));
   }
 
@@ -478,8 +486,8 @@ class _HomePage extends State<HomePage> with WidgetsBindingObserver{
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    inForeground = state == AppLifecycleState.paused;
-    print('inForeground: $inForeground');
+    inBackground = state == AppLifecycleState.paused;
+    print('inBackground: $inBackground');
   }
 
   void notifDialog() {
